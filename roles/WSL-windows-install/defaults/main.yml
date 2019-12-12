@@ -1,0 +1,5 @@
+---
+# defaults file for WSL-windows-install
+
+wsl_enable: false
+wsl_url: "https://aka.ms/wsl-ubuntu-1804"

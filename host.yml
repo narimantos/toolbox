@@ -1,0 +1,10 @@
+laptop:
+  hosts:
+    laptop-01:
+      ansible_host: 192.168.2.11
+      ansible_user: Administrator
+      ansible_ssh_pass: "{{ vault_laptop_secret }}"
+      ansible_port: 5985
+      ansible_connection: winrm
+      ansible_winrm_transport: ntlm
+      ansible_winrm_message_encryption: auto

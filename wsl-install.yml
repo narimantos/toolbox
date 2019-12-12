@@ -1,0 +1,8 @@
+---
+
+- hosts: all
+  vars_files:
+    - ./vars/secret.yml
+  gather_facts: false
+  roles:
+    - WSL-windows-install

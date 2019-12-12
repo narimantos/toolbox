@@ -1,0 +1,104 @@
+---
+#tasks file for WSL-windows-install
+
+- name: 'windows : wsl enable'
+  win_dsc:
+    resource_name: WindowsOptionalFeature
+    Name: Microsoft-Windows-Subsystem-Linux
+    Ensure: Enable
+  register: wsl_enable
+  when: wsl_enable
+
+- name: Uninstall Skype without specifying the path
+  win_package:
+    product_id: Microsoft.SkypeApp
+    arguments: /S
+    state: absent
+  register: homedir_out
+
+- name: 'Remove all win10 defail'
+  win_shell: |
+    (New-Object -Com Shell.Application). NameSpace('shell:::{4234d49b-0245-4df3-b780-3893943456e1}').  Items() | %{ $_.Verbs() } |    ?{$_.Name -match 'Un.*pin from Start'} |    %{$_.DoIt()}
+  register: homedir_out2
+
+- name: 'Install Chocolatey'
+  win_shell: |
+    Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+  register: homedir_out3
+
+- name: Install multiple packages sequentially
+  win_chocolatey:
+    name: '{{ item }}'
+    state: present
+  register: homedir_out4
+  loop:
+  - docker-desktop
+  - putty
+  - windirstat
+  - vscode
+  - postman
+  - winrar 
+  - microsoft-teams 
+  - python3
+  - git
+  - spotify
+
+- name: Add a local and domain user to a local group
+  win_group_membership:
+    name: docker-users
+    members:
+      - Narim
+    state: present
+
+- name: Upgrade installed packages
+  win_chocolatey:
+    name: all
+    state: latest
+  register: homedir_out5
+
+- name: 'Copy WSL Script to destination'
+  win_copy: 
+    src: ./roles/WSL-windows-install/files/install_wsl.ps1
+    dest: C:\
+  register: homedir_out6
+
+- name: windows test command
+  win_shell: C:\install_wsl.ps1
+ 
+- name: 'Get WSL appx'
+  win_shell: |
+    Invoke-WebRequest -Uri {{wsl_url}} -OutFile C:/wsl2.appx
+
+- name: 'Install appx via shell'
+  become: yes
+  become_method: runas
+  become_user: Administrator
+  win_shell: 'C:\install_wsl.ps1' 
+
+
+
+- name: 'Install WSL appx'
+  become: yes
+  become_user: Administrator
+  win_command: powershell.exe -ExecutionPolicy ByPass -File C:/install_wsl.ps1
+
+
+- name: Run whoami
+  become: yes
+  become_user: Administrator
+  win_shell: whoami
+
+- name: output last win_shell
+  debug:
+    msg:
+    - "Task0  {{wsl_enable}}"
+    - "Task1  {{homedir_out}}"
+    - "Task2  {{homedir_out2}}"
+    - "Task3  {{homedir_out3}}"
+    - "Task4  {{homedir_out4}}"
+    - "Task5  {{homedir_out5}}"
+    - "Task6  {{homedir_out6}}"
+
+- name:
+  win_reboot:
+  when: wsl-enable.reboot_required

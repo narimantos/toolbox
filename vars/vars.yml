@@ -1,0 +1,2 @@
+---
+symfony_secret: "{{ vault_linux_secret }}"
